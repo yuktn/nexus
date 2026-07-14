@@ -16,8 +16,6 @@ async function mainLoop() {
   while (true) {
     try {
       await sendHeartbeatLoop(); 
-      
-      console.log("Task complete");
     } catch (e) {
       console.log(e);
     }
@@ -29,20 +27,11 @@ async function mainLoop() {
 async function sendHeartbeatLoop() {
 
     const currentLoad = await getSystemLoad();
-    let status: string;
-
-    if (currentLoad.currentLoad < 50) {
-        status = 'HEALTHY';
-    } else if (currentLoad.currentLoad < 101) {
-        status = 'HIGH_LOAD';
-    } else {
-        status = 'UNKNOWN';
-    }
 
     const payload = {
         deviceName: process.env?.AGENT_NAME ?? 'Unknown Device',
         timestamp: new Date().toISOString(),
-        status, //HEALTHY, HIGH_LOAD, DOWN, UNKNOWN
+        currentLoad: currentLoad ?? null,
     };
 
     const url = `${process.env.HOST_URL}:${process.env.PORT}/api/heartbeat`;
