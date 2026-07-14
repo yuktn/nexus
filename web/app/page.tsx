@@ -43,6 +43,16 @@ export default function Home() {
         <div className="grid gap-4">
           {heartbeats.map((deviceHistory) => {
             const deviceName = deviceHistory[0]?.deviceName
+            const currentLoad = deviceHistory[deviceHistory.length - 1]?.currentLoad
+
+            const color =
+              typeof currentLoad === 'number'
+                ? currentLoad < 50
+                  ? '#22c55e'
+                  : currentLoad < 80
+                    ? '#eab308'
+                    : '#ef4444'
+                : '#22c55e'
 
             if (!deviceName) return null
 
@@ -50,7 +60,8 @@ export default function Home() {
               <ChartLineLinear
                 deviceHistory={deviceHistory}
                 className="min-w-2xl max-w-2xl"
-                color="#22c55e" // TODO: set color per load
+                key={deviceName}
+                color={color}
               />
             )
           })}
