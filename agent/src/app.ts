@@ -7,20 +7,18 @@ const interval = process.env.HEARTBEAT_MS ? parseInt(process.env.HEARTBEAT_MS) :
 async function getSystemLoad() {
     const load = await si.currentLoad();
 
-    return {
-        currentLoad: load.currentLoad,
-    };
+    return load.currentLoad;
 }
 
 async function mainLoop() {
-  while (true) {
-    try {
-      await sendHeartbeatLoop(); 
-    } catch (e) {
-      console.log(e);
+    while (true) {
+        try {
+            await sendHeartbeatLoop();
+        } catch (e) {
+            console.log(e);
+        }
+        await sleep(interval);
     }
-    await sleep(interval); 
-  }
 }
 
 
@@ -31,7 +29,7 @@ async function sendHeartbeatLoop() {
     const payload = {
         deviceName: process.env?.AGENT_NAME ?? 'Unknown Device',
         timestamp: new Date().toISOString(),
-        currentLoad: currentLoad ?? null,
+        currentLoad: currentLoad,
     };
 
     const url = `${process.env.HOST_URL}:${process.env.PORT}/api/heartbeat`;
