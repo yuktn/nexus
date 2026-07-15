@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ChartLineLinear } from "@/components/ui/chartLineLinear"
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown } from "lucide-react"
 
 type Heartbeat = {
   deviceName: string
@@ -10,48 +10,93 @@ type Heartbeat = {
   currentLoad?: number
 }
 
-type HealthState = "healthy" | "warning" | "critical" | "error"
+type HealthState =
+  | "healthy"
+  | "warning"
+  | "critical"
+  | "offline"
+  | "error"
+  | "noDevices"
 
-const TEST_DEVICE = "Test Environment"
-const MAX_HISTORY = 30
+const OFFLINE_AFTER_MS = 10_000
 
-function getLoad(history: Heartbeat[]) {
-  return history.at(-1)?.currentLoad
+function getLatest(history: Heartbeat[]) {
+  return history.at(-1)
 }
 
-function getState(load?: number): HealthState {
+function getLoad(history: Heartbeat[]) {
+  return getLatest(history)?.currentLoad
+}
+
+function isOffline(history: Heartbeat[]) {
+  const timestamp = getLatest(history)?.timestamp
+
+  if (!timestamp) return true
+
+  const lastHeartbeat = new Date(timestamp).getTime()
+
+  if (Number.isNaN(lastHeartbeat)) return true
+
+  return Date.now() - lastHeartbeat > OFFLINE_AFTER_MS
+}
+
+function getState(history: Heartbeat[]): HealthState {
+  if (isOffline(history)) return "offline"
+
+  const load = getLoad(history)
+
   if (typeof load !== "number") return "error"
   if (load >= 80) return "critical"
   if (load >= 50) return "warning"
+
   return "healthy"
+}
+
+function getDeviceName(history: Heartbeat[]) {
+  return history.at(-1)?.deviceName ?? history[0]?.deviceName
 }
 
 const healthStyles = {
   healthy: {
     color: "#16a36a",
-    background: "bg-emerald-50",
+    background: "bg-gradient-to-b from-emerald-100 to-emerald-50",
+    cardBackground: "bg-white",
     label: "healthy",
   },
   warning: {
     color: "#ca8a04",
-    background: "bg-amber-50",
+    background: "bg-gradient-to-b from-amber-100 to-amber-50",
+    cardBackground: "bg-white",
     label: "degraded",
   },
   critical: {
     color: "#dc2626",
-    background: "bg-red-50",
+    background: "bg-gradient-to-b from-red-100 to-red-50",
+    cardBackground: "bg-white",
     label: "critical",
+  },
+  offline: {
+    color: "#a9a1aa",
+    background: "bg-gradient-to-b from-zinc-200 to-zinc-100",
+    cardBackground: "bg-zinc-50",
+    label: "offline",
   },
   error: {
     color: "#dc2626",
-    background: "bg-red-50",
+    background: "bg-gradient-to-b from-red-100 to-red-50",
+    cardBackground: "bg-white",
     label: "error",
+  },
+  noDevices: {
+    color: "#b7b7b7",
+    background: "bg-gradient-to-b from-gray-100 to-gray-50",
+    cardBackground: "bg-white",
+    label: "no devices",
   },
 }
 
 export default function Home() {
   const [heartbeats, setHeartbeats] = useState<Heartbeat[][]>([])
-  const [testHistory, setTestHistory] = useState<Heartbeat[]>([])
   const [openCards, setOpenCards] = useState<Set<string>>(new Set())
   const [fetchError, setFetchError] = useState(false)
 
@@ -68,11 +113,32 @@ export default function Home() {
 
         const result = await response.json()
 
-        setHeartbeats(
-          Array.isArray(result.data)
-            ? result.data.filter(Array.isArray)
-            : []
+        const nextHeartbeats: Heartbeat[][] = Array.isArray(result.data)
+          ? result.data.filter(
+              (history: unknown): history is Heartbeat[] =>
+                Array.isArray(history) && history.length > 0
+            )
+          : []
+
+        const activeDeviceNames = new Set(
+          nextHeartbeats
+            .map(getDeviceName)
+            .filter((deviceName): deviceName is string => Boolean(deviceName))
         )
+
+        setHeartbeats(nextHeartbeats)
+
+        setOpenCards((current) => {
+          const next = new Set<string>()
+
+          current.forEach((deviceName) => {
+            if (activeDeviceNames.has(deviceName)) {
+              next.add(deviceName)
+            }
+          })
+
+          return next
+        })
 
         setFetchError(false)
       } catch (error) {
@@ -88,42 +154,25 @@ export default function Home() {
     return () => window.clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    const addTestHeartbeat = () => {
-      setTestHistory((history) =>
-        [
-          ...history,
-          {
-            deviceName: TEST_DEVICE,
-            timestamp: new Date().toISOString(),
-            currentLoad: Math.random() * 100,
-          },
-        ].slice(-MAX_HISTORY)
-      )
-    }
-
-    addTestHeartbeat()
-
-    const interval = window.setInterval(addTestHeartbeat, 3000)
-
-    return () => window.clearInterval(interval)
-  }, [])
-
-  const devices = useMemo(
-    () => [...heartbeats, testHistory].filter((history) => history.length > 0),
-    [heartbeats, testHistory]
-  )
+  const devices = useMemo(() => heartbeats, [heartbeats])
 
   const overallState = useMemo<HealthState>(() => {
     if (fetchError) return "error"
 
-    const states = devices.map((history) =>
-      getState(getLoad(history))
-    )
+    if (devices.length === 0) return "noDevices"
+
+    const states = devices.map(getState)
 
     if (states.includes("critical")) return "critical"
-    if (states.includes("warning")) return "warning"
     if (states.includes("error")) return "error"
+    if (states.includes("warning")) return "warning"
+
+    const offlineDevices = states.filter(
+      (state) => state === "offline"
+    ).length
+
+    if (offlineDevices === devices.length) return "offline"
+    if (offlineDevices > 0) return "warning"
 
     return "healthy"
   }, [devices, fetchError])
@@ -157,7 +206,7 @@ export default function Home() {
 
         <div className="grid gap-3">
           {devices.map((deviceHistory, index) => {
-            const latest = deviceHistory.at(-1)
+            const latest = getLatest(deviceHistory)
 
             const deviceName =
               latest?.deviceName ??
@@ -165,42 +214,61 @@ export default function Home() {
               `Agent ${index + 1}`
 
             const currentLoad = latest?.currentLoad
-            const state = getState(currentLoad)
-            const color = healthStyles[state].color
+            const state = getState(deviceHistory)
+            const style = healthStyles[state]
             const isOpen = openCards.has(deviceName)
+            const offline = state === "offline"
 
             return (
               <section
                 key={deviceName}
-                className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm"
+                className={`overflow-hidden rounded-2xl border border-zinc-200 shadow-sm transition-colors duration-300 ${style.cardBackground}`}
               >
                 <button
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => toggleCard(deviceName)}
-                  className="flex w-full items-center justify-between gap-5 px-5 py-5 text-left outline-none transition-colors hover:bg-zinc-50 focus-visible:bg-zinc-50"
+                  className="flex w-full items-center justify-between gap-5 px-5 py-5 text-left outline-none transition-colors hover:bg-zinc-100/60 focus-visible:bg-zinc-100/60"
                 >
                   <div className="flex min-w-0 items-center gap-4">
                     <span
                       className="size-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: style.color }}
                     />
 
-                    <h2 className="truncate text-sm font-semibold text-zinc-900">
-                      {deviceName}
-                    </h2>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <h2
+                        className={`truncate text-sm font-semibold ${
+                          offline ? "text-zinc-500" : "text-zinc-900"
+                        }`}
+                      >
+                        {deviceName}
+                      </h2>
+
+                      {offline && (
+                        <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                          offline
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <span className="min-w-16 text-right text-2xl font-bold tabular-nums tracking-tight text-zinc-900">
-                      {typeof currentLoad === "number"
-                        ? Math.round(currentLoad)
-                        : "—"}
+                    {offline ? (
+                      <span className="min-w-16 text-right text-sm font-semibold text-zinc-400">
+                        --%
+                      </span>
+                    ) : (
+                      <span className="min-w-16 text-right text-2xl font-bold tabular-nums tracking-tight text-zinc-900">
+                        {typeof currentLoad === "number"
+                          ? Math.round(currentLoad)
+                          : "—"}
 
-                      <small className="ml-1 text-xs font-normal text-zinc-400">
-                        %
-                      </small>
-                    </span>
+                        <small className="ml-1 text-xs font-normal text-zinc-400">
+                          %
+                        </small>
+                      </span>
+                    )}
 
                     <span
                       className={`text-xl text-zinc-400 transition-transform duration-300 ${
@@ -225,7 +293,7 @@ export default function Home() {
                       <ChartLineLinear
                         deviceHistory={deviceHistory}
                         className="w-full border-0 shadow-none"
-                        color={color}
+                        color={style.color}
                         compact
                       />
                     </div>
