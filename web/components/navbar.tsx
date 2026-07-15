@@ -18,7 +18,7 @@ export default function Navbar() {
 
       <Link
         href="https://yuktn.dev"
-        className="text-base text-gray-300"
+        className="text-base text-gray-400"
       >
         by yuktn
       </Link>
