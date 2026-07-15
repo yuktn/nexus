@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import localFont from 'next/font/local'
 import Navbar from '@/components/navbar'
@@ -9,6 +9,12 @@ const dunggeunmo = localFont({
   display: 'swap',
   weight: '100 900',
   variable: '--font-dunggeunmo',
+})
+
+const JetBrainsMono = localFont({
+  src: '../fonts/JetbrainsMono/jetbrains-mono-latin-wght-normal.woff2',
+  display: 'swap',
+  variable: '--font-JetBrainsMono',
 })
 
 const geistSans = Geist({
@@ -35,8 +41,8 @@ const RootLayout = async ({
 }) => {
   console.log('RootLayout', await params)
   return (
-    <html lang="ko" className={`${dunggeunmo.variable}`}>
-      <body className={dunggeunmo.className}>
+    <html lang="ko" className={`${JetBrainsMono.variable}`}>
+      <body className={JetBrainsMono.className}>
         <Navbar />
         <div className="flex">
           <div className="flex flex-col flex-1">

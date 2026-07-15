@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import 'dotenv/config';
+import verifyBearerToken from './middleware/auth.js'
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -22,7 +24,7 @@ app.get('/api/heartbeat', (req, res) => {
   });
 });
 
-app.post('/api/heartbeat', (req, res) => {
+app.post('/api/heartbeat', verifyBearerToken, (req, res) => {
   const body = req.body as Heartbeat;
 
   const heartbeat: Heartbeat = {
@@ -40,11 +42,31 @@ app.post('/api/heartbeat', (req, res) => {
     heartbeats.push([heartbeat]);
   }
 
-  // heartbeats.forEach(row => {
-  //   row.forEach(element => {
-  //     if element.timestamp
-  //   });
-  // });
+  heartbeats.forEach(row => {
+    row.forEach(element => {
+
+      if (element.timestamp != undefined) {
+        const now = Date.now();
+
+        const targetTime = new Date(element.timestamp).getTime();
+
+        if (isNaN(targetTime)) {
+          throw new Error("Invalid timestamp format provided.");
+        }
+
+        if (Math.abs(now - targetTime) > 30000) {
+          const index = heartbeats.indexOf([element]);
+
+          if (index > -1) {
+            heartbeats.splice(index, 1);
+          }
+
+          console.log('deleted'+element+'due to age')
+        }
+      }
+
+    });
+  });
 
   res.status(200).json({
     message: 'Heartbeat saved',

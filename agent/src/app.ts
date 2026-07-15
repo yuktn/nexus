@@ -39,6 +39,7 @@ async function sendHeartbeatLoop() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.SHARED_PEPPER}`,
             },
             body: JSON.stringify(payload),
         });

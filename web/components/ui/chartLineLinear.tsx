@@ -33,6 +33,7 @@ type ChartLineLinearProps = {
   deviceHistory: Heartbeat[]
   className?: string
   color?: string
+  compact?: boolean
 }
 
 const WINDOW_MS = 30_000
@@ -55,6 +56,7 @@ export function ChartLineLinear({
   deviceHistory,
   className,
   color = "var(--chart-1)",
+  compact = false,
 }: ChartLineLinearProps) {
   const gradientId = useId().replaceAll(":", "")
 
@@ -121,9 +123,10 @@ export function ChartLineLinear({
   )
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
+  <Card className={cn("overflow-hidden", className)}>
+    {!compact && (
       <CardHeader className="space-y-5 border-b pb-5">
-        <div className="flex items-center justify-between gap-4 mb-0">
+        <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 items-center gap-2">
             <span
               title={isOnline ? "Online" : "Offline"}
@@ -132,9 +135,7 @@ export function ChartLineLinear({
                 "size-2 shrink-0 rounded-full transition-opacity",
                 isOnline ? "opacity-100" : "opacity-25"
               )}
-              style={{
-                backgroundColor: color,
-              }}
+              style={{ backgroundColor: color }}
             />
 
             <CardTitle className="truncate text-lg font-semibold tracking-tight">
@@ -160,9 +161,10 @@ export function ChartLineLinear({
           </span>
         </div>
       </CardHeader>
+    )}
 
-      <CardContent className="pt-6">
-        {chartData.length === 0 ? (
+    <CardContent className={cn(compact ? "p-0" : "pt-6")}>
+              {chartData.length === 0 ? (
           <div className="flex h-[240px] items-center justify-center">
             <p className="text-sm text-muted-foreground">
               {latestTimestamp ? "Device offline" : "No heartbeat data"}
@@ -262,7 +264,7 @@ export function ChartLineLinear({
             </AreaChart>
           </ChartContainer>
         )}
-      </CardContent>
-    </Card>
-  )
+    </CardContent>
+  </Card>
+)
 }

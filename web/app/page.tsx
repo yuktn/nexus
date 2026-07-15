@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ChartLineLinear } from "@/components/ui/chartLineLinear"
+import { ChevronDown } from 'lucide-react';
 
 type Heartbeat = {
   deviceName: string
@@ -29,26 +30,22 @@ const healthStyles = {
   healthy: {
     color: "#16a36a",
     background: "bg-emerald-50",
-    label: "HEALTHY",
-    description: "All agents are operating normally.",
+    label: "healthy",
   },
   warning: {
     color: "#ca8a04",
     background: "bg-amber-50",
-    label: "DEGRADED",
-    description: "One or more agents require attention.",
+    label: "degraded",
   },
   critical: {
     color: "#dc2626",
     background: "bg-red-50",
-    label: "CRITICAL",
-    description: "Critical load detected.",
+    label: "critical",
   },
   error: {
     color: "#dc2626",
     background: "bg-red-50",
-    label: "CONNECTION ERROR",
-    description: "Agent data is currently unavailable.",
+    label: "error",
   },
 }
 
@@ -153,7 +150,7 @@ export default function Home() {
     >
       <main className="mx-auto w-full max-w-3xl overflow-auto scrollbar-none">
         <header className="mb-12">
-          <h1 className="text-5xl font-bold tracking-tight text-zinc-950 sm:text-7xl">
+          <h1 className="text-5xl font-bold tracking-tight text-gray-800 sm:text-7xl">
             {overallStyle.label}
           </h1>
         </header>
@@ -211,7 +208,7 @@ export default function Home() {
                       }`}
                       aria-hidden="true"
                     >
-                      ⌄
+                      <ChevronDown />
                     </span>
                   </div>
                 </button>
@@ -224,11 +221,12 @@ export default function Home() {
                   }`}
                 >
                   <div className="min-h-0 overflow-hidden">
-                    <div className="border-t border-zinc-100 p-4 sm:p-5">
+                    <div className="border-t border-zinc-100 px-4 py-5 sm:px-5">
                       <ChartLineLinear
                         deviceHistory={deviceHistory}
                         className="w-full border-0 shadow-none"
                         color={color}
+                        compact
                       />
                     </div>
                   </div>
