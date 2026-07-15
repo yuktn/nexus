@@ -1,0 +1,54 @@
+name: Deploy Nexus
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nexus-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Raspberry Pi
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+          tags: tag:ci
+          ping: ${{ vars.PI_HOST }}
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          PI_HOST: ${{ vars.PI_HOST }}
+        run: |
+          set -euo pipefail
+
+          install -d -m 0700 "$HOME/.ssh"
+
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 0600 "$HOME/.ssh/id_ed25519"
+
+          ssh-keyscan -H "$PI_HOST" >> "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/known_hosts"
+
+      - name: Deploy Nexus
+        env:
+          PI_HOST: ${{ vars.PI_HOST }}
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            deploy@"$PI_HOST"
