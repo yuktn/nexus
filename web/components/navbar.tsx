@@ -31,7 +31,7 @@ export default function Navbar() {
         rel="noopener noreferrer"
         className="flex items-center gap-1"
       >
-        about-nexus
+        yuktn/nexus
         <ExternalLink size={16} />
       </Link>
     </div>
