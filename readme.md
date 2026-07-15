@@ -4,7 +4,7 @@
 nexus is a project that lets devices send 'heartbeats' (requests comprised of the name, load, and timestamp) to the main server,  
 which are then requested by the web server to be visualized.
 
-You can check the project in action at nexus[https://nexus.yuktn.dev]!
+You can check the project in action at [nexus](https://nexus.yuktn.dev)!
 
 
 ## API Reference
