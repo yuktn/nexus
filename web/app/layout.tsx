@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import localFont from 'next/font/local'
+import Navbar from '@/components/navbar'
 
 const dunggeunmo = localFont({
   src: '../fonts/DungGeunMo/DungGeunMo.woff2',
@@ -36,6 +37,7 @@ const RootLayout = async ({
   return (
     <html lang="ko" className={`${dunggeunmo.variable}`}>
       <body className={dunggeunmo.className}>
+        <Navbar />
         <div className="flex">
           <div className="flex flex-col flex-1">
             <main className="w-full bg-light">{children}</main>

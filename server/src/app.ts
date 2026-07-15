@@ -16,10 +16,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/heartbeat', (req, res) => {
-	res.status(200).json({
-		message: 'GET request received',
-		data: heartbeats
-	});
+  res.status(200).json({
+    message: 'GET request received',
+    data: heartbeats
+  });
 });
 
 app.post('/api/heartbeat', (req, res) => {
@@ -40,6 +40,12 @@ app.post('/api/heartbeat', (req, res) => {
     heartbeats.push([heartbeat]);
   }
 
+  // heartbeats.forEach(row => {
+  //   row.forEach(element => {
+  //     if element.timestamp
+  //   });
+  // });
+
   res.status(200).json({
     message: 'Heartbeat saved',
     data: heartbeat,
@@ -47,5 +53,5 @@ app.post('/api/heartbeat', (req, res) => {
 });
 
 app.listen(port, () => {
-	console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port}`);
 });
