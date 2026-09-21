@@ -66,4 +66,4 @@ temp/
 *.pem
 *.key
 *.crt
-agent/2.env
+package/agent/2.env

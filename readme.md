@@ -1,7 +1,7 @@
 
 # nexus
 
-nexus is a project that lets devices send 'heartbeats' (requests comprised of the name, load, and timestamp) to the main server,  
+nexus is a project that lets devices send 'heartbeats' (requests comprised of the name, load, and timestamp) to the main server,
 which are then requested by the web server to be visualized.
 
 You can check the project in action at [nexus](https://nexus.yuktn.dev)!
@@ -21,8 +21,8 @@ You can check the project in action at [nexus](https://nexus.yuktn.dev)!
 | `currentLoad` | `number` | Current load of the device (collected by `systeminformation`) |
 | `timestamp` | `string` | Time when the heartbeat was sent |
 
-The POST endpoint is guarded by a middleware, that expects a token for authorization.   
-Check `server/example.env` and `agent/example.env`. The contents should match in order for the requests to be authorized. 
+The POST endpoint is guarded by a middleware, that expects a token for authorization.
+Check `package/server/example.env` and `package/agent/example.env`. The contents should match in order for the requests to be authorized.
 
 
 #### Get the list of heartbeats
@@ -40,33 +40,40 @@ Check `server/example.env` and `agent/example.env`. The contents should match in
 **! Heartbeats older than 30 seconds are automatically deleted by the server !**
 
 
+## Workspace
+
+This pnpm monorepo uses `package/agent`, `package/server`, `package/web`, and
+`package/shared`. Shared API types live in `package/shared/types` and are
+exported by the private `@nexus/shared` workspace package. Use `import type` from
+`@nexus/shared/types/heartbeat` or the `@nexus/shared` type-only barrel for API
+types. Web-only UI props live in `package/web/types/ui.ts` and use `@/types/ui`. Third-party types
+remain imported from their owning libraries. Shared has no runtime exports or
+build artifacts; UI type dependencies belong to web.
+
 ## Run Locally
 
-Clone the project
+Use Node.js 24+ and pnpm 11.13.0. Run commands from the repository root:
 
 ```bash
-  git clone https://github.com/yuktn/nexus
+pnpm install --frozen-lockfile
 ```
 
-Go to the project directory
+Copy `package/server/example.env` to `package/server/.env` and
+`package/agent/example.env` to `package/agent/.env`, then fill in their values.
+The server requires `MONGODB_URI` and both processes need matching `SHARED_PEPPER`.
 
 ```bash
-  cd nexus
+pnpm dev                     # all three apps
+pnpm --filter server dev     # or run each app independently
+pnpm --filter agent dev
+pnpm --filter web dev
+pnpm typecheck
+pnpm lint
+pnpm build
 ```
 
-Install dependencies for each machine
-
-```bash
-  npm install
-```
-
-Fill .env
-
-and finally,
-
-Start the server
-
-```bash
-  npm run start
-```
-
+After building, use `pnpm --filter server start`, `pnpm --filter agent start`,
+and `pnpm --filter web start` as needed. Deployment scripts must use these
+workspace commands or the new `package/<app>` paths. The SSH deployment command
+is configured on the deployment host and should be updated there if it refers
+to the previous top-level application directories.

@@ -1,0 +1,25 @@
+{
+  "name": "@nexus/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./types/index.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.ts"
+    },
+    "./types": {
+      "types": "./types/index.ts"
+    },
+    "./types/heartbeat": {
+      "types": "./types/heartbeat.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
