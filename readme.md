@@ -1,7 +1,8 @@
 
 # nexus
 
-! A newer and easier-to-self-host alternative, [better-nexus](https://github.com/yuktn/better-nexus) is released!
+! A newer and easier-to-self-host alternative, [better-nexus](https://github.com/yuktn/better-nexus) is released!  
+As a result, this repo is getting archived.
 
 nexus is a project that lets devices send 'heartbeats' (requests comprised of the name, load, and timestamp) to the main server,
 which are then requested by the web server to be visualized.
